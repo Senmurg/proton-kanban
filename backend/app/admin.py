@@ -3,6 +3,7 @@ from sqladmin import Admin, ModelView
 
 from app.db.session import engine
 from app.models.project import Project
+from app.models.project_member import ProjectMember
 from app.models.user import User
 
 
@@ -25,7 +26,17 @@ class ProjectAdmin(ModelView, model=Project):
     column_sortable_list = [Project.name, Project.slug, Project.created_at]
 
 
+class ProjectMemberAdmin(ModelView, model=ProjectMember):
+    name = "Project Member"
+    name_plural = "Project Members"
+    icon = "fa-solid fa-user-group"
+    column_list = [ProjectMember.id, ProjectMember.project_id, ProjectMember.user_id, ProjectMember.role, ProjectMember.created_at]
+    column_searchable_list = [ProjectMember.role]
+    column_sortable_list = [ProjectMember.created_at, ProjectMember.updated_at]
+
+
 def setup_admin(app: FastAPI) -> None:
     admin = Admin(app=app, engine=engine, title="Dashboard Admin")
     admin.add_view(UserAdmin)
     admin.add_view(ProjectAdmin)
+    admin.add_view(ProjectMemberAdmin)

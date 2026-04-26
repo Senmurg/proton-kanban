@@ -8,10 +8,11 @@ import {
   Stack,
   TextField,
 } from '@mui/material';
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 
-import { projectSchema, type ProjectSchema } from '../features/projects/projects-validation';
+import { useI18n } from '../features/i18n/i18n-context';
+import { createProjectSchema, type ProjectSchema } from '../features/projects/projects-validation';
 import type { Project } from '../features/projects/project-types';
 
 interface ProjectFormDialogProps {
@@ -35,6 +36,8 @@ export function ProjectFormDialog({
   onClose,
   onSubmit,
 }: ProjectFormDialogProps) {
+  const { copy } = useI18n();
+  const projectSchema = useMemo(() => createProjectSchema(copy), [copy]);
   const {
     control,
     handleSubmit,
@@ -59,7 +62,7 @@ export function ProjectFormDialog({
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
-      <DialogTitle>{initialValues ? 'Редактировать проект' : 'Новый проект'}</DialogTitle>
+      <DialogTitle>{initialValues ? copy.projectForm.editTitle : copy.projectForm.createTitle}</DialogTitle>
       <DialogContent>
         <Stack spacing={2} sx={{ mt: 1 }}>
           <Controller
@@ -68,7 +71,7 @@ export function ProjectFormDialog({
             render={({ field }) => (
               <TextField
                 {...field}
-                label="Название"
+                label={copy.common.name}
                 error={Boolean(errors.name)}
                 helperText={errors.name?.message}
               />
@@ -81,9 +84,9 @@ export function ProjectFormDialog({
             render={({ field }) => (
               <TextField
                 {...field}
-                label="Slug"
+                label={copy.common.slug}
                 error={Boolean(errors.slug)}
-                helperText={errors.slug?.message ?? 'Например: proton-kanban'}
+                helperText={errors.slug?.message ?? copy.projectForm.slugHelper}
               />
             )}
           />
@@ -96,7 +99,7 @@ export function ProjectFormDialog({
                 {...field}
                 multiline
                 minRows={4}
-                label="Описание"
+                label={copy.common.description}
                 error={Boolean(errors.description)}
                 helperText={errors.description?.message}
               />
@@ -106,10 +109,10 @@ export function ProjectFormDialog({
       </DialogContent>
       <DialogActions sx={{ px: 3, pb: 3 }}>
         <Button onClick={onClose} color="inherit">
-          Отмена
+          {copy.common.cancel}
         </Button>
         <Button onClick={handleSubmit((values) => onSubmit(values))} variant="contained" disabled={isSubmitting}>
-          {initialValues ? 'Сохранить' : 'Создать'}
+          {initialValues ? copy.common.save : copy.common.create}
         </Button>
       </DialogActions>
     </Dialog>

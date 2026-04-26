@@ -34,3 +34,8 @@ class Project(Base):
     )
 
     owner = relationship("User", back_populates="owned_projects")
+    members = relationship(
+        "ProjectMember",
+        back_populates="project",
+        cascade="all, delete-orphan",
+    )

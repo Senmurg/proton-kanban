@@ -7,7 +7,7 @@ export default defineConfig({
     host: '0.0.0.0',
     port: 5173,
     strictPort: true,
-    allowedHosts: ['proton-canban.local', 'localhost'],
+    allowedHosts: ['proton-kanban.local', 'localhost'],
     proxy: {
       '/api': {
         target: 'http://backend:8000',

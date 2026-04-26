@@ -1,17 +1,20 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Alert, Button, Link, Stack, TextField } from '@mui/material';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
 
 import { AuthLayout } from '../components/auth-layout';
 import { useAuth } from '../features/auth/auth-context';
-import { registerSchema, type RegisterSchema } from '../features/auth/auth-validation';
+import { useI18n } from '../features/i18n/i18n-context';
+import { createRegisterSchema, type RegisterSchema } from '../features/auth/auth-validation';
 
 export function RegisterPage() {
   const navigate = useNavigate();
   const { register } = useAuth();
+  const { copy } = useI18n();
   const [error, setError] = useState<string | null>(null);
+  const registerSchema = useMemo(() => createRegisterSchema(copy), [copy]);
   const {
     control,
     handleSubmit,
@@ -31,12 +34,12 @@ export function RegisterPage() {
       await register(values);
       navigate('/', { replace: true });
     } catch (submissionError) {
-      setError(submissionError instanceof Error ? submissionError.message : 'Не удалось создать пользователя');
+      setError(submissionError instanceof Error ? submissionError.message : copy.auth.register.fallbackError);
     }
   });
 
   return (
-    <AuthLayout title="Регистрация" subtitle="Создай первого пользователя и сразу попади в приложение.">
+    <AuthLayout title={copy.auth.register.title} subtitle={copy.auth.register.subtitle}>
       <Stack component="form" spacing={2.5} onSubmit={onSubmit}>
         {error ? <Alert severity="error">{error}</Alert> : null}
 
@@ -46,7 +49,7 @@ export function RegisterPage() {
           render={({ field }) => (
             <TextField
               {...field}
-              label="Имя"
+              label={copy.common.fullName}
               error={Boolean(errors.full_name)}
               helperText={errors.full_name?.message}
             />
@@ -59,7 +62,7 @@ export function RegisterPage() {
           render={({ field }) => (
             <TextField
               {...field}
-              label="Email"
+              label={copy.common.email}
               type="email"
               error={Boolean(errors.email)}
               helperText={errors.email?.message}
@@ -73,7 +76,7 @@ export function RegisterPage() {
           render={({ field }) => (
             <TextField
               {...field}
-              label="Пароль"
+              label={copy.common.password}
               type="password"
               error={Boolean(errors.password)}
               helperText={errors.password?.message}
@@ -82,11 +85,11 @@ export function RegisterPage() {
         />
 
         <Button type="submit" variant="contained" size="large" disabled={isSubmitting}>
-          Зарегистрироваться
+          {copy.auth.register.submit}
         </Button>
 
         <Link component={RouterLink} to="/login" underline="hover" sx={{ alignSelf: 'flex-start' }}>
-          Уже есть аккаунт? Войти
+          {copy.auth.register.switchLink}
         </Link>
       </Stack>
     </AuthLayout>

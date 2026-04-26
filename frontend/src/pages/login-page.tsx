@@ -1,18 +1,21 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Alert, Button, Link, Stack, TextField } from '@mui/material';
+import { useMemo, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { Link as RouterLink, useLocation, useNavigate } from 'react-router-dom';
-import { useState } from 'react';
 
 import { AuthLayout } from '../components/auth-layout';
 import { useAuth } from '../features/auth/auth-context';
-import { loginSchema, type LoginSchema } from '../features/auth/auth-validation';
+import { useI18n } from '../features/i18n/i18n-context';
+import { createLoginSchema, type LoginSchema } from '../features/auth/auth-validation';
 
 export function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const { login } = useAuth();
+  const { copy } = useI18n();
   const [error, setError] = useState<string | null>(null);
+  const loginSchema = useMemo(() => createLoginSchema(copy), [copy]);
   const {
     control,
     handleSubmit,
@@ -33,12 +36,12 @@ export function LoginPage() {
       await login(values);
       navigate(from, { replace: true });
     } catch (submissionError) {
-      setError(submissionError instanceof Error ? submissionError.message : 'Не удалось войти');
+      setError(submissionError instanceof Error ? submissionError.message : copy.auth.login.fallbackError);
     }
   });
 
   return (
-    <AuthLayout title="Вход" subtitle="Войди в систему, чтобы управлять проектами и развивать продукт дальше.">
+    <AuthLayout title={copy.auth.login.title} subtitle={copy.auth.login.subtitle}>
       <Stack component="form" spacing={2.5} onSubmit={onSubmit}>
         {error ? <Alert severity="error">{error}</Alert> : null}
 
@@ -48,7 +51,7 @@ export function LoginPage() {
           render={({ field }) => (
             <TextField
               {...field}
-              label="Email"
+              label={copy.common.email}
               type="email"
               error={Boolean(errors.email)}
               helperText={errors.email?.message}
@@ -62,7 +65,7 @@ export function LoginPage() {
           render={({ field }) => (
             <TextField
               {...field}
-              label="Пароль"
+              label={copy.common.password}
               type="password"
               error={Boolean(errors.password)}
               helperText={errors.password?.message}
@@ -71,11 +74,11 @@ export function LoginPage() {
         />
 
         <Button type="submit" variant="contained" size="large" disabled={isSubmitting}>
-          Войти
+          {copy.auth.login.submit}
         </Button>
 
         <Link component={RouterLink} to="/register" underline="hover" sx={{ alignSelf: 'flex-start' }}>
-          Нет аккаунта? Зарегистрироваться
+          {copy.auth.login.switchLink}
         </Link>
       </Stack>
     </AuthLayout>

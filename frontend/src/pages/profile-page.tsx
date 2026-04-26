@@ -1,22 +1,25 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Alert, Box, Button, Card, CardContent, Stack, TextField } from '@mui/material';
 import { useMutation } from '@tanstack/react-query';
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { z } from 'zod';
 
 import { PageHeader } from '../components/page-header';
-import { useAuth } from '../features/auth/auth-context';
 import { updateCurrentUser } from '../features/auth/auth-api';
+import { useAuth } from '../features/auth/auth-context';
+import { useI18n } from '../features/i18n/i18n-context';
 
-const profileSchema = z.object({
-  full_name: z.string().min(2, 'Минимум 2 символа').max(255, 'Слишком длинное имя'),
-});
-
-type ProfileSchema = z.infer<typeof profileSchema>;
+type ProfileSchema = {
+  full_name: string;
+};
 
 export function ProfilePage() {
   const { accessToken, user, refreshUser } = useAuth();
+  const { copy } = useI18n();
+  const profileSchema = useMemo(() => z.object({
+    full_name: z.string().min(2, copy.validation.min2).max(255, copy.validation.max255),
+  }), [copy]);
 
   const {
     control,
@@ -51,12 +54,11 @@ export function ProfilePage() {
         }}
       >
         <Stack spacing={3}>
+          <PageHeader title={copy.profile.title} subtitle={copy.profile.subtitle} />
 
           {mutation.error ? (
             <Alert severity="error">
-              {mutation.error instanceof Error
-                ? mutation.error.message
-                : 'Не удалось обновить профиль'}
+              {mutation.error instanceof Error ? mutation.error.message : copy.profile.updateFailed}
             </Alert>
           ) : null}
 
@@ -68,7 +70,7 @@ export function ProfilePage() {
                 onSubmit={handleSubmit(async (values) => mutation.mutateAsync(values))}
               >
                 <TextField
-                  label="Email"
+                  label={copy.common.email}
                   value={user?.email ?? ''}
                   disabled
                   fullWidth
@@ -81,7 +83,7 @@ export function ProfilePage() {
                   render={({ field }) => (
                     <TextField
                       {...field}
-                      label="Имя"
+                      label={copy.common.fullName}
                       fullWidth
                       error={Boolean(errors.full_name)}
                       helperText={errors.full_name?.message}
@@ -103,7 +105,7 @@ export function ProfilePage() {
                     textTransform: 'none',
                   }}
                 >
-                  Сохранить профиль
+                  {copy.profile.save}
                 </Button>
               </Stack>
             </CardContent>

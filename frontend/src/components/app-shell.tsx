@@ -24,6 +24,8 @@ import { useMemo, useState } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 
 import { useAuth } from '../features/auth/auth-context';
+import { useI18n } from '../features/i18n/i18n-context';
+import { LanguageSwitcher } from './language-switcher';
 
 const DRAWER_WIDTH = 272;
 
@@ -34,43 +36,44 @@ export function AppShell() {
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
+  const { copy } = useI18n();
 
   const navigation = useMemo(
     () => [
-      { label: 'Дашборд', icon: <DashboardRoundedIcon />, to: '/' },
-      { label: 'Проекты', icon: <FolderRoundedIcon />, to: '/projects' },
-      { label: 'Профиль', icon: <AccountCircleRoundedIcon />, to: '/profile' },
+      { label: copy.navigation.dashboard, icon: <DashboardRoundedIcon />, to: '/' },
+      { label: copy.navigation.projects, icon: <FolderRoundedIcon />, to: '/projects' },
+      { label: copy.navigation.profile, icon: <AccountCircleRoundedIcon />, to: '/profile' },
     ],
-    [],
+    [copy],
   );
 
   const drawer = (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-    <Box
-      sx={{
-        px: 3,
-        py: 3,
-        display: 'flex',
-        alignItems: 'center',
-        gap: 1.5,
-      }}
-    >
       <Box
-        component="img"
-        src="/proton-logo-h.svg"
-        alt="Proton Kanban"
         sx={{
-          width: 32,
-          height: 32,
-          objectFit: 'contain',
+          px: 3,
+          py: 3,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 1.5,
         }}
-      />
-      <Typography variant="h6" fontWeight={700}>
-        Proton Kanban
-      </Typography>
-    </Box>
+      >
+        <Box
+          component="img"
+          src="/proton-logo-h.svg"
+          alt={copy.common.appName}
+          sx={{
+            width: 32,
+            height: 32,
+            objectFit: 'contain',
+          }}
+        />
+        <Typography variant="h6" fontWeight={700}>
+          {copy.common.appName}
+        </Typography>
+      </Box>
 
-     <Divider />
+      <Divider />
 
       <List sx={{ px: 2, py: 2, flexGrow: 1 }}>
         {navigation.map((item) => (
@@ -95,7 +98,7 @@ export function AppShell() {
           <Avatar>{user?.full_name?.[0] ?? user?.email?.[0]?.toUpperCase() ?? 'U'}</Avatar>
           <Box sx={{ minWidth: 0 }}>
             <Typography variant="body2" fontWeight={700} noWrap>
-              {user?.full_name ?? 'Без имени'}
+              {user?.full_name ?? copy.common.noName}
             </Typography>
             <Typography variant="caption" color="text.secondary" noWrap>
               {user?.email}
@@ -113,7 +116,7 @@ export function AppShell() {
           <ListItemIcon>
             <LogoutRoundedIcon />
           </ListItemIcon>
-          <ListItemText primary="Выйти" />
+          <ListItemText primary={copy.navigation.logout} />
         </ListItemButton>
       </Stack>
     </Box>
@@ -142,10 +145,12 @@ export function AppShell() {
             )}
             <Box>
               <Typography variant="h6" sx={{ lineHeight: 1.2 }}>
-                {navigation.find((item) => item.to === pathname)?.label ?? 'Proton Kanban'}
+                {navigation.find((item) => item.to === pathname)?.label ?? copy.common.appName}
               </Typography>
             </Box>
           </Stack>
+
+          <LanguageSwitcher />
         </Toolbar>
       </AppBar>
 

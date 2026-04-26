@@ -21,6 +21,7 @@ import { useNavigate } from 'react-router-dom';
 import { PageHeader } from '../components/page-header';
 import { ProjectFormDialog } from '../components/project-form-dialog';
 import { useAuth } from '../features/auth/auth-context';
+import { useI18n } from '../features/i18n/i18n-context';
 import { createProject, deleteProject, listProjects, updateProject } from '../features/projects/projects-api';
 import type { Project } from '../features/projects/project-types';
 import type { ProjectSchema } from '../features/projects/projects-validation';
@@ -29,6 +30,7 @@ export function ProjectsPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { accessToken } = useAuth();
+  const { copy, language } = useI18n();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
 
@@ -79,6 +81,8 @@ export function ProjectsPage() {
   return (
     <Stack spacing={3}>
       <PageHeader
+        title={copy.projects.title}
+        subtitle={copy.projects.subtitle}
         action={
           <Button
             variant="contained"
@@ -88,20 +92,20 @@ export function ProjectsPage() {
               setDialogOpen(true);
             }}
           >
-            Новый проект
+            {copy.projects.newProject}
           </Button>
         }
       />
 
       {mutationError ? (
         <Alert severity="error">
-          {mutationError instanceof Error ? mutationError.message : 'Не удалось выполнить действие'}
+          {mutationError instanceof Error ? mutationError.message : copy.projects.actionFailed}
         </Alert>
       ) : null}
 
       {projectsQuery.error ? (
         <Alert severity="error">
-          {projectsQuery.error instanceof Error ? projectsQuery.error.message : 'Не удалось загрузить проекты'}
+          {projectsQuery.error instanceof Error ? projectsQuery.error.message : copy.projects.loadFailed}
         </Alert>
       ) : null}
 
@@ -114,36 +118,43 @@ export function ProjectsPage() {
                   <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
                     <Typography variant="h6">{project.name}</Typography>
                     <Chip size="small" label={project.slug} />
+                    <Chip size="small" color="primary" variant="outlined" label={copy.roles[project.current_user_role]} />
                   </Stack>
                   <Typography sx={{ mt: 1 }} color="text.secondary">
-                    {project.description || 'Пока без описания'}
+                    {project.description || copy.projects.noDescription}
                   </Typography>
                   <Typography sx={{ mt: 1.5 }} variant="body2" color="text.secondary">
-                    Обновлено: {new Date(project.updated_at).toLocaleString('ru-RU')}
+                    {copy.projects.updatedAt}: {new Date(project.updated_at).toLocaleString(language === 'ru' ? 'ru-RU' : 'en-US')}
                   </Typography>
                 </Box>
 
                 <Stack direction="row" spacing={1} justifyContent="flex-end">
-                  <Tooltip title="Открыть">
+                  <Tooltip title={copy.projects.open}>
                     <IconButton onClick={() => navigate(`/projects/${project.id}`)}>
                       <VisibilityRoundedIcon />
                     </IconButton>
                   </Tooltip>
-                  <Tooltip title="Редактировать">
-                    <IconButton
-                      onClick={() => {
-                        setEditingProject(project);
-                        setDialogOpen(true);
-                      }}
-                    >
-                      <EditRoundedIcon />
-                    </IconButton>
-                  </Tooltip>
-                  <Tooltip title="Удалить">
-                    <IconButton color="error" onClick={() => deleteMutation.mutate(project.id)}>
-                      <DeleteOutlineRoundedIcon />
-                    </IconButton>
-                  </Tooltip>
+
+                  {project.permissions.can_update ? (
+                    <Tooltip title={copy.projects.edit}>
+                      <IconButton
+                        onClick={() => {
+                          setEditingProject(project);
+                          setDialogOpen(true);
+                        }}
+                      >
+                        <EditRoundedIcon />
+                      </IconButton>
+                    </Tooltip>
+                  ) : null}
+
+                  {project.permissions.can_delete ? (
+                    <Tooltip title={copy.projects.delete}>
+                      <IconButton color="error" onClick={() => deleteMutation.mutate(project.id)}>
+                        <DeleteOutlineRoundedIcon />
+                      </IconButton>
+                    </Tooltip>
+                  ) : null}
                 </Stack>
               </Stack>
             </CardContent>
@@ -154,9 +165,9 @@ export function ProjectsPage() {
           <Card>
             <CardContent>
               <Stack spacing={1}>
-                <Typography variant="h6">Пока нет проектов</Typography>
+                <Typography variant="h6">{copy.projects.emptyTitle}</Typography>
                 <Typography color="text.secondary">
-                  Создай первый проект и мы уже сможем строить поверх него задачи, роли и доски.
+                  {copy.projects.emptyDescription}
                 </Typography>
               </Stack>
             </CardContent>
